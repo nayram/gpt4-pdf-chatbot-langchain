@@ -1,6 +1,6 @@
 import { Document } from 'langchain/document';
 import { readFile } from 'fs/promises';
-import { BaseDocumentLoader } from 'langchain/document_loaders';
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
 export abstract class BufferLoader extends BaseDocumentLoader {
   constructor(public filePathOrBlob: string | Blob) {
@@ -34,16 +34,48 @@ export class CustomPDFLoader extends BufferLoader {
     metadata: Document['metadata'],
   ): Promise<Document[]> {
     const { pdf } = await PDFLoaderImports();
-    const parsed = await pdf(raw);
-    return [
-      new Document({
-        pageContent: parsed.text,
-        metadata: {
-          ...metadata,
-          pdf_numpages: parsed.numpages,
-        },
-      }),
-    ];
+
+    const options = {
+      verbosity: 0,
+    };
+
+    try {
+      const parsed = await pdf(raw, options);
+
+      if (!parsed.text || parsed.text.trim().length === 0) {
+        throw new Error('No text content extracted from PDF');
+      }
+
+      return [
+        new Document({
+          pageContent: parsed.text,
+          metadata: {
+            ...metadata,
+            pdf_numpages: parsed.numpages,
+          },
+        }),
+      ];
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown PDF parsing error';
+      console.warn(
+        `PDF parsing warning for file ${metadata.source}: ${errorMessage}`,
+      );
+
+      if (error.text) {
+        return [
+          new Document({
+            pageContent: error.text,
+            metadata: {
+              ...metadata,
+              pdf_numpages: error.numpages || 1,
+              warning: errorMessage,
+            },
+          }),
+        ];
+      }
+
+      throw error;
+    }
   }
 }
 

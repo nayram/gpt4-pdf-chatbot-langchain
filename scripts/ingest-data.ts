@@ -1,51 +1,81 @@
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
-import { PineconeStore } from 'langchain/vectorstores/pinecone';
+import { PineconeStore } from '@langchain/pinecone';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { DirectoryLoader } from 'langchain/document_loaders/fs/directory';
 import { pinecone } from '@/utils/pinecone-client';
 import { CustomPDFLoader } from '@/utils/customPDFLoader';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
-import { DirectoryLoader } from 'langchain/document_loaders/fs/directory';
 
-/* Name of directory to retrieve your files from */
+
 const filePath = 'docs';
 
 export const run = async () => {
   try {
-    /*load raw docs from the all files in the directory */
+    
     const directoryLoader = new DirectoryLoader(filePath, {
       '.pdf': (path) => new CustomPDFLoader(path),
     });
 
-    // const loader = new PDFLoader(filePath);
+    
     const rawDocs = await directoryLoader.load();
 
-    /* Split text into chunks */
+    
+    
     const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 1000,
-      chunkOverlap: 200,
+      chunkSize: 2000,
+      chunkOverlap: 400,
     });
 
     const docs = await textSplitter.splitDocuments(rawDocs);
-    console.log('split docs', docs);
+    console.log(`Split docs into ${docs.length} chunks`);
 
     console.log('creating vector store...');
-    /*create and store the embeddings in the vectorStore*/
-    const embeddings = new OpenAIEmbeddings();
-    const index = pinecone.Index(PINECONE_INDEX_NAME); //change to your own index name
+    
+    const embeddings = new OpenAIEmbeddings({
+      batchSize: 50,
+    });
+    const index = pinecone.Index(PINECONE_INDEX_NAME);
 
-    //embed the PDF documents
+    // Process documents in smaller batches to avoid rate limiting
     await PineconeStore.fromDocuments(docs, embeddings, {
       pineconeIndex: index,
       namespace: PINECONE_NAME_SPACE,
       textKey: 'text',
     });
-  } catch (error) {
-    console.log('error', error);
-    throw new Error('Failed to ingest your data');
+  } catch (error: any) {
+    console.error('An error occurred during data ingestion:');
+
+    if (error.response?.status === 429) {
+      console.error(
+        'OpenAI API rate limit exceeded. Try:\n' +
+          '1. Increasing the delay between batches\n' +
+          '2. Reducing the batch size\n' +
+          '3. Waiting a few minutes before retrying',
+      );
+    } else if (error.code === 'ENOENT') {
+      console.error(
+        `File system error: Could not find directory or file at '${filePath}'`,
+      );
+    } else if (error.message?.includes('Pinecone')) {
+      console.error('Pinecone database error:', error.message);
+    } else {
+      console.error('Unexpected error:', error.message || error);
+      
+      console.debug('Full error details:', JSON.stringify(error, null, 2));
+    }
+
+    throw new Error(
+      `Failed to ingest your data: ${error.message || 'Unknown error'}`,
+    );
   }
 };
 
 (async () => {
-  await run();
-  console.log('ingestion complete');
+  try {
+    await run();
+    console.log('Ingestion complete');
+  } catch (error) {
+    
+    process.exit(1);
+  }
 })();

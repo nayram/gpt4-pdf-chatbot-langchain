@@ -25,7 +25,7 @@ export default function Home() {
   }>({
     messages: [
       {
-        message: 'Hi, what would you like to learn about this legal case?',
+        message: 'Hi, what would you like to learn about our insurance products?',
         type: 'apiMessage',
       },
     ],
@@ -98,7 +98,7 @@ export default function Home() {
           history: [...state.history, [question, data.text]],
         }));
       }
-      console.log('messageState', messageState);
+      // console.log('messageState', messageState);
 
       setLoading(false);
 
