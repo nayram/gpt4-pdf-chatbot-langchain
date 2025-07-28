@@ -44,7 +44,7 @@ export function ensureBaseConfiguration(
     typeof BaseConfigurationAnnotation.State
   >;
   return {
-    retrieverProvider: configurable.retrieverProvider || 'supabase',
+    retrieverProvider: configurable.retrieverProvider || 'memory',
     filterKwargs: configurable.filterKwargs || {},
     k: configurable.k || 5,
   };
