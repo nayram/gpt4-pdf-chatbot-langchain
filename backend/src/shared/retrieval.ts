@@ -1,6 +1,7 @@
 import { VectorStoreRetriever } from '@langchain/core/vectorstores';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { createClient } from '@supabase/supabase-js';
 import { RunnableConfig } from '@langchain/core/runnables';
 import {
@@ -34,6 +35,19 @@ export async function makeSupabaseRetriever(
   });
 }
 
+export async function makeMemoryRetriever(
+  configuration: typeof BaseConfigurationAnnotation.State,
+): Promise<VectorStoreRetriever> {
+  const embeddings = new OpenAIEmbeddings({
+    model: 'text-embedding-3-small',
+  });
+  const vectorStore = new MemoryVectorStore(embeddings);
+  return vectorStore.asRetriever({
+    k: configuration.k,
+    filter: configuration.filterKwargs,
+  });
+}
+
 export async function makeRetriever(
   config: RunnableConfig,
 ): Promise<VectorStoreRetriever> {
@@ -41,6 +55,8 @@ export async function makeRetriever(
   switch (configuration.retrieverProvider) {
     case 'supabase':
       return makeSupabaseRetriever(configuration);
+    case 'memory':
+      return makeMemoryRetriever(configuration);
     default:
       throw new Error(
         `Unsupported retriever provider: ${configuration.retrieverProvider}`,

@@ -5,7 +5,7 @@ type IndexConfigurables = IndexConfiguration;
 
 export const retrievalAssistantStreamConfig: StreamConfigurables = {
   queryModel: 'openai/gpt-4o-mini',
-  retrieverProvider: 'supabase',
+  retrieverProvider: 'memory',
   k: 5,
 };
 
@@ -14,5 +14,5 @@ export const retrievalAssistantStreamConfig: StreamConfigurables = {
  */
 export const indexConfig: IndexConfigurables = {
   useSampleDocs: false,
-  retrieverProvider: 'supabase',
+  retrieverProvider: 'memory',
 };
