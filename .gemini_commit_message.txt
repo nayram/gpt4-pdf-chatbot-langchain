@@ -1,0 +1,12 @@
+docs: Add comprehensive architectural documentation
+
+This commit introduces a new `documentation` directory containing a detailed analysis of the project's architecture and principles for building production-grade LLM applications.
+
+The documentation is structured into several files, using the current project as a case study and reference:
+
+- **project_architecture.md**: Provides a high-level overview of the monorepo structure, technology stack, and key design decisions.
+- **ingestion_graph.md**: A deep dive into the document ingestion workflow, its state management, and the design patterns used.
+- **retrieval_graph.md**: A detailed analysis of the RAG agent, including its routing logic and use of structured prompts.
+- **architect_mindset.md**: Outlines the guiding questions and mental models for designing robust LLM systems.
+- **production_principles.md**: Details the core principles for building applications that are reliable, scalable, and secure.
+- **proposed_improvements.md**: A roadmap of potential future enhancements for the project.
