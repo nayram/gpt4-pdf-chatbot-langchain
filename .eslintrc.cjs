@@ -6,7 +6,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest', // Enables modern JavaScript features
     sourceType: 'module', // Allows import/export statements,
-    project: './tsconfig.json', // Tells ESLint to use the tsconfig.json file
+    project: ['./backend/tsconfig.json', './frontend/tsconfig.json'], // Points to workspace tsconfig files
   },
   extends: [
     'eslint:recommended', // Basic ESLint rules
