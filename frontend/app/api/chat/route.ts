@@ -62,7 +62,12 @@ export async function POST(req: Request) {
           try {
             // Forward each chunk from the graph to the client
             for await (const chunk of stream) {
-              // Only send relevant chunks
+              console.log(
+                'Raw LangGraph chunk:',
+                JSON.stringify(chunk, null, 2),
+              );
+
+              // Forward all chunks to help debug what the frontend receives
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`),
               );

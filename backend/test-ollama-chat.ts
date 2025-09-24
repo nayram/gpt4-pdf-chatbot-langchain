@@ -5,7 +5,7 @@ async function testOllamaChatModel() {
 
   try {
     // Test loading the chat model
-    const chatModel = await loadChatModel('ollama/llama3.2', 0.1);
+    const chatModel = await loadChatModel('ollama/llama3.1', 0.1);
     console.log('✅ Chat model loaded successfully');
 
     // Test a simple chat interaction

@@ -4,7 +4,7 @@ type StreamConfigurables = AgentConfiguration;
 type IndexConfigurables = IndexConfiguration;
 
 export const retrievalAssistantStreamConfig: StreamConfigurables = {
-  queryModel: 'ollama/gpt-oss',
+  queryModel: 'ollama/llama3.1',
   retrieverProvider: 'postgres',
   k: 5,
 };

@@ -130,7 +130,7 @@ export default function Home() {
 
           const { event, data } = sseEvent;
 
-          if (event === 'messages/partial') {
+          if (event === 'messages/partial' || event === 'messages/complete') {
             if (Array.isArray(data)) {
               const lastObj = data[data.length - 1];
               if (lastObj?.type === 'ai') {

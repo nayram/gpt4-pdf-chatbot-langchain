@@ -1,39 +1,20 @@
 import { VectorStoreRetriever } from '@langchain/core/vectorstores';
-import { OllamaEmbeddings } from '@langchain/ollama';
-import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
 import { PGVectorStore } from '@langchain/community/vectorstores/pgvector';
-import { createClient } from '@supabase/supabase-js';
 import { RunnableConfig } from '@langchain/core/runnables';
 import {
   BaseConfigurationAnnotation,
   ensureBaseConfiguration,
 } from './configuration.js';
+import { DirectOllamaEmbeddings } from './directOllama.js';
 
 export async function makeSupabaseRetriever(
   configuration: typeof BaseConfigurationAnnotation.State,
 ): Promise<VectorStoreRetriever> {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error(
-      'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables are not defined',
-    );
-  }
-  const embeddings = new OllamaEmbeddings({
-    model: 'embeddinggemma',
-    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-  });
-  const supabaseClient = createClient(
-    process.env.SUPABASE_URL ?? '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  // Supabase with direct Ollama not implemented - use postgres provider instead
+  console.log('Configuration:', configuration); // Use configuration parameter to avoid warning
+  throw new Error(
+    'Supabase with direct Ollama not implemented yet - use postgres provider',
   );
-  const vectorStore = new SupabaseVectorStore(embeddings, {
-    client: supabaseClient,
-    tableName: 'documents',
-    queryName: 'match_documents',
-  });
-  return vectorStore.asRetriever({
-    k: configuration.k,
-    filter: configuration.filterKwargs,
-  });
 }
 
 export async function makePostgresRetriever(
@@ -50,13 +31,16 @@ export async function makePostgresRetriever(
     );
   }
 
-  const embeddings = new OllamaEmbeddings({
+  // Use direct Ollama embeddings for better performance and reliability
+  const embeddings = new DirectOllamaEmbeddings({
     model: 'embeddinggemma',
     baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
   });
 
   const config = {
-    connectionString,
+    postgresConnectionOptions: {
+      connectionString,
+    },
     tableName: 'document_chunks',
     columns: {
       idColumnName: 'id',
@@ -66,6 +50,9 @@ export async function makePostgresRetriever(
     },
   };
 
+  console.log(
+    '🔧 Initializing PostgreSQL vector store with direct Ollama embeddings...',
+  );
   const pgVectorStore = await PGVectorStore.initialize(embeddings, config);
 
   return pgVectorStore.asRetriever({
